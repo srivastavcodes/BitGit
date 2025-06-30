@@ -114,10 +114,10 @@ func repoCreate(path string) (*GitRepository, error) {
 		return nil, fmt.Errorf("error checking worktree: %w", err)
 	}
 
-	assert(repoDir(repo, true, "branches"))
-	assert(repoDir(repo, true, "objects"))
-	assert(repoDir(repo, true, "refs", "tags"))
-	assert(repoDir(repo, true, "refs", "heads"))
+	assertNoErr(repoDir(repo, true, "branches"))
+	assertNoErr(repoDir(repo, true, "objects"))
+	assertNoErr(repoDir(repo, true, "refs", "tags"))
+	assertNoErr(repoDir(repo, true, "refs", "heads"))
 
 	descPath, err := repoFile(repo, false, "description")
 	if err != nil {
@@ -163,7 +163,7 @@ func repoDefaultConfig() (*ini.File, error) {
 	return config, nil
 }
 
-func assert(_ string, err error) {
+func assertNoErr(_ any, err error) {
 	if err != nil {
 		panic(err)
 	}

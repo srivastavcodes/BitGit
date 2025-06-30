@@ -34,8 +34,8 @@ Available commands:
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println(`Usage: bitgit <commands> [args...]
-                                      bitgit help - for more information`)
+		fmt.Println("Usage: bitgit <commands> [args...]")
+		fmt.Println("       bitgit help - for more information")
 		return
 	}
 	commands := os.Args[1]
