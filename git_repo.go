@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/ini.v1"
 )
 
 type GitRepository struct {
 	WorkTree string
 	GitDir   string
-	Config   string
+	Config   *ini.File
 }
 
 func NewGitRepo(path string, force bool) (*GitRepository, error) {
@@ -26,6 +28,28 @@ func NewGitRepo(path string, force bool) (*GitRepository, error) {
 		WorkTree: worktree,
 		GitDir:   gitdir,
 	}
+	configPath, err := repoFile(repo, false, "config")
+	if err != nil {
+		return nil, fmt.Errorf("")
+	}
+	if _, err := os.Stat(configPath); err == nil {
+		config, err := ini.Load(configPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read config file: %w", err)
+		}
+		repo.Config = config
+	} else if !force {
+		return nil, fmt.Errorf("configuration file missing")
+	}
+	if !force {
+		vers, err := repo.Config.Section("core").Key("repositoryformatversion").Int()
+		if err != nil {
+			return nil, fmt.Errorf("missing or invalid repositoryformatversion")
+		}
+		if vers != 0 {
+			return nil, fmt.Errorf("unsupported repositoryformatversion '%d': %w", vers, err)
+		}
+	}
 	return repo, nil
 }
 
@@ -33,6 +57,9 @@ func repoPath(repo *GitRepository, path ...string) string {
 	return filepath.Join(append([]string{repo.GitDir}, path...)...)
 }
 
+// repoFile creates directories if it doesn't exist, excluding the last file.
+//
+// example: repoFile(repo, false, "refs", "remote", "origin", "HEAD") creates ".git/refs/remote/origin"
 func repoFile(repo *GitRepository, mkdir bool, path ...string) (string, error) {
 	if len(path) == 0 {
 		return "", fmt.Errorf("no path given")
@@ -64,4 +91,80 @@ func repoDir(repo *GitRepository, mkdir bool, path ...string) (string, error) {
 		return dirPath, nil
 	}
 	return "", nil
+}
+
+func repoCreate(path string) (*GitRepository, error) {
+	repo, err := NewGitRepo(path, true)
+	if err != nil {
+		return nil, fmt.Errorf("error creating new repository: %w", err)
+	}
+	if info, err := os.Stat(repo.WorkTree); err == nil {
+		if !info.IsDir() {
+			return nil, fmt.Errorf("%s is not a directory", path)
+		}
+		entries, err := os.ReadDir(repo.GitDir)
+		if err == nil && len(entries) > 0 {
+			return nil, fmt.Errorf("%s is not empty", path)
+		}
+	} else if os.IsNotExist(err) {
+		if err := os.MkdirAll(repo.WorkTree, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create worktree: %w", err)
+		}
+	} else {
+		return nil, fmt.Errorf("error checking worktree: %w", err)
+	}
+
+	assert(repoDir(repo, true, "branches"))
+	assert(repoDir(repo, true, "objects"))
+	assert(repoDir(repo, true, "refs", "tags"))
+	assert(repoDir(repo, true, "refs", "heads"))
+
+	descPath, err := repoFile(repo, false, "description")
+	if err != nil {
+		return nil, err
+	}
+	content := []byte("Unnamed repository; edit this file 'description' to name the repository.\n")
+	err = os.WriteFile(descPath, content, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("error writing to file '%s': %w", descPath, err)
+	}
+	HEADPath, err := repoFile(repo, false, "HEAD")
+	if err != nil {
+		return nil, err
+	}
+	err = os.WriteFile(HEADPath, []byte("ref: refs/head/master\n"), 0644)
+	if err != nil {
+		return nil, fmt.Errorf("error writing to file '%s': %w", descPath, err)
+	}
+	config, err := repoDefaultConfig()
+	if err != nil {
+		return nil, fmt.Errorf("error initializing config: %w", err)
+	}
+	configPath, err := repoFile(repo, false, "config")
+	if err != nil {
+		return nil, err
+	}
+	err = config.SaveTo(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error writing to config file '%s': %w", configPath, err)
+	}
+	return repo, nil
+}
+
+func repoDefaultConfig() (*ini.File, error) {
+	config := ini.Empty()
+	core, err := config.NewSection("core")
+	if err != nil {
+		return nil, err
+	}
+	_, _ = core.NewKey("repositoryformatversion", "0")
+	_, _ = core.NewKey("filemode", "false")
+	_, _ = core.NewKey("bare", "false")
+	return config, nil
+}
+
+func assert(_ string, err error) {
+	if err != nil {
+		panic(err)
+	}
 }

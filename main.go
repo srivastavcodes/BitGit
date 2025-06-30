@@ -5,6 +5,11 @@ import (
 	"os"
 )
 
+const (
+	ColorRed   = "\033[31m"
+	ColorReset = "\033[0m"
+)
+
 const helpMessage = `
 Usage:
   bitgit <command> [options]
@@ -29,13 +34,30 @@ Available commands:
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println(`Usage: git <commands> [args...]
-                                      git help - for more information`)
+		fmt.Println(`Usage: bitgit <commands> [args...]
+                                      bitgit help - for more information`)
 		return
 	}
 	commands := os.Args[1]
 	switch commands {
 	case "help":
 		fmt.Print(helpMessage)
+	case "init":
+		invokeInit()
 	}
+}
+
+func invokeInit() {
+	path := ""
+	if len(os.Args) > 2 {
+		path = os.Args[2]
+	} else {
+		path = "."
+	}
+	repo, err := repoCreate(path)
+	if err != nil {
+		fmt.Printf("%serror creating repository:%s %v\n", ColorRed, ColorReset, err)
+		return
+	}
+	fmt.Printf("initialized an empty git repository in %s\n", repo.GitDir)
 }
