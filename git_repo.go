@@ -93,6 +93,27 @@ func repoDir(repo *GitRepository, mkdir bool, path ...string) (string, error) {
 	return "", nil
 }
 
+func repoFind(startPath string, required bool) (*GitRepository, error) {
+	path, err := filepath.Abs(startPath)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		gitdir := filepath.Join(path, ".git")
+		if info, err := os.Stat(gitdir); err == nil && info.IsDir() {
+			return NewGitRepo(path, false)
+		}
+		parent := filepath.Dir(path)
+		if parent == path {
+			if required {
+				return nil, fmt.Errorf("no .git directory found")
+			}
+			return nil, nil
+		}
+		path = parent
+	}
+}
+
 func repoCreate(path string) (*GitRepository, error) {
 	repo, err := NewGitRepo(path, true)
 	if err != nil {
