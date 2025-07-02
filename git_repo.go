@@ -106,7 +106,7 @@ func repoFind(startPath string, required bool) (*GitRepository, error) {
 		parent := filepath.Dir(path)
 		if parent == path {
 			if required {
-				return nil, fmt.Errorf("no .git directory found")
+				return nil, fmt.Errorf("no .git directory found in: %s", path)
 			}
 			return nil, nil
 		}
