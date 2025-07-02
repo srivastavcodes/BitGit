@@ -114,28 +114,39 @@ func repoCreate(path string) (*GitRepository, error) {
 		return nil, fmt.Errorf("error checking worktree: %w", err)
 	}
 
-	assertNoErr(repoDir(repo, true, "branches"))
-	assertNoErr(repoDir(repo, true, "objects"))
-	assertNoErr(repoDir(repo, true, "refs", "tags"))
-	assertNoErr(repoDir(repo, true, "refs", "heads"))
+	subdirs := [][]string{
+		{"branches"},
+		{"refs", "tags"},
+		{"objects"},
+		{"refs", "heads"},
+	}
+	for _, dir := range subdirs {
+		if _, err = repoDir(repo, true, dir...); err != nil {
+			panic(err)
+		}
+	}
 
 	descPath, err := repoFile(repo, false, "description")
 	if err != nil {
 		return nil, err
 	}
+
 	content := []byte("Unnamed repository; edit this file 'description' to name the repository.\n")
 	err = os.WriteFile(descPath, content, 0644)
 	if err != nil {
-		return nil, fmt.Errorf("error writing to file '%s': %w", descPath, err)
+		return nil, err
 	}
+
 	HEADPath, err := repoFile(repo, false, "HEAD")
 	if err != nil {
 		return nil, err
 	}
+
 	err = os.WriteFile(HEADPath, []byte("ref: refs/head/master\n"), 0644)
 	if err != nil {
-		return nil, fmt.Errorf("error writing to file '%s': %w", descPath, err)
+		return nil, err
 	}
+
 	config, err := repoDefaultConfig()
 	if err != nil {
 		return nil, fmt.Errorf("error initializing config: %w", err)
@@ -146,7 +157,7 @@ func repoCreate(path string) (*GitRepository, error) {
 	}
 	err = config.SaveTo(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("error writing to config file '%s': %w", configPath, err)
+		return nil, err
 	}
 	return repo, nil
 }
@@ -161,10 +172,4 @@ func repoDefaultConfig() (*ini.File, error) {
 	_, _ = core.NewKey("filemode", "false")
 	_, _ = core.NewKey("bare", "false")
 	return config, nil
-}
-
-func assertNoErr(_ any, err error) {
-	if err != nil {
-		panic(err)
-	}
 }
