@@ -30,7 +30,7 @@ func NewGitRepo(path string, force bool) (*GitRepository, error) {
 	}
 	configPath, err := repoFile(repo, false, "config")
 	if err != nil {
-		return nil, fmt.Errorf("")
+		return nil, err
 	}
 	if _, err := os.Stat(configPath); err == nil {
 		config, err := ini.Load(configPath)
@@ -176,7 +176,7 @@ func repoCreate(path string) (*GitRepository, error) {
 	}
 	err = config.SaveTo(configPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't write to config file: %w", err)
 	}
 	return repo, nil
 }
