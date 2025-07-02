@@ -125,7 +125,6 @@ func repoCreate(path string) (*GitRepository, error) {
 			panic(err)
 		}
 	}
-
 	descPath, err := repoFile(repo, false, "description")
 	if err != nil {
 		return nil, err
@@ -141,7 +140,6 @@ func repoCreate(path string) (*GitRepository, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	err = os.WriteFile(HEADPath, []byte("ref: refs/head/master\n"), 0644)
 	if err != nil {
 		return nil, err
