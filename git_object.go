@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"compress/zlib"
+	"crypto/sha1"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 type GitObject interface {
 	Serialize(repo *GitRepository) ([]byte, error)
 	Deserialize(data []byte) error
+	Type() string
 }
 
 func NewGitObject(data []byte) (GitObject, error) {
@@ -74,4 +76,41 @@ func objectRead(repo *GitRepository, sha string) (GitObject, error) {
 		return nil, fmt.Errorf("error deserializing: %w", err)
 	}
 	return object, nil
+}
+
+func objectWrite(obj GitObject, repo *GitRepository) (string, error) {
+	data, err := obj.Serialize(repo)
+	if err != nil {
+		return "", fmt.Errorf("failed to serialize object: %w", err)
+	}
+	header := fmt.Sprintf("%s %d \x00", obj.Type(), len(data))
+	result := append([]byte(header), data...)
+
+	// compute the hash
+	sha := fmt.Sprintf("%x", sha1.Sum(result))
+
+	if repo == nil {
+		return sha, nil
+	}
+	// compute the path
+	path, err := repoFile(repo, true, "objects", sha[0:2], sha[2:])
+	if err != nil {
+		return "", fmt.Errorf("failed to create object path: %w", err)
+	}
+	// check if the file already exists
+	if _, err = os.Stat(path); os.IsNotExist(err) {
+		var compressed bytes.Buffer
+		writer := zlib.NewWriter(&compressed)
+
+		if _, err := writer.Write(result); err != nil {
+			return "", fmt.Errorf("failed to compressed data: %w", err)
+		}
+		if err = writer.Close(); err != nil {
+			return "", fmt.Errorf("failed to close compressor: %w", err)
+		}
+		if err = os.WriteFile(path, compressed.Bytes(), 0644); err != nil {
+			return "", fmt.Errorf("error writing objects to file: %w", err)
+		}
+	}
+	return sha, nil
 }
