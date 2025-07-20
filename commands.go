@@ -13,7 +13,7 @@ func CmdCatFile(objectName, objectType string) error {
 	return catFile(repo, objectName, objectType)
 }
 
-func CmdHashObjects(path, objType string, write bool) error {
+func CmdHashObjects(path, oType string, write bool) error {
 	var repo *GitRepository
 	var err error
 
@@ -31,7 +31,7 @@ func CmdHashObjects(path, objType string, write bool) error {
 	}
 	defer file.Close()
 
-	sha, err := objectHash(file, objType, repo)
+	sha, err := objectHash(file, oType, repo)
 	if err != nil {
 		return fmt.Errorf("failed to hash object: %w", err)
 	}

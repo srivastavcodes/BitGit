@@ -68,6 +68,12 @@ func objectRead(repo *GitRepository, sha string) (GitObject, error) {
 	switch oType {
 	case "blob":
 		object = &GitBlob{}
+	case "tree":
+		object = &GitTree{}
+	case "tag":
+		object = &GitTag{}
+	case "commit":
+		object = &GitCommit{}
 	default:
 		return nil, fmt.Errorf("unknown type %s for object %s", oType, sha)
 	}
@@ -78,12 +84,12 @@ func objectRead(repo *GitRepository, sha string) (GitObject, error) {
 	return object, nil
 }
 
-func objectWrite(obj GitObject, repo *GitRepository) (string, error) {
-	data, err := obj.Serialize(repo)
+func objectWrite(object GitObject, repo *GitRepository) (string, error) {
+	data, err := object.Serialize(repo)
 	if err != nil {
 		return "", fmt.Errorf("failed to serialize object: %w", err)
 	}
-	header := fmt.Sprintf("%s %d \x00", obj.Type(), len(data))
+	header := fmt.Sprintf("%s %d \x00", object.Type(), len(data))
 	result := append([]byte(header), data...)
 
 	// compute the hash
@@ -136,21 +142,27 @@ func objectFind(_ *GitRepository, name string, _ string, _ bool) (string, error)
 	return name, nil
 }
 
-func objectHash(file io.Reader, objType string, repo *GitRepository) (string, error) {
+func objectHash(file io.Reader, oType string, repo *GitRepository) (string, error) {
 	data, err := io.ReadAll(file)
 	if err != nil {
 		return "", fmt.Errorf("error while reading file: %w", err)
 	}
-	var obj GitObject
+	var object GitObject
 
-	switch objType {
+	switch oType {
 	case "blob":
-		obj = &GitBlob{}
+		object = &GitBlob{}
+	case "tree":
+		object = &GitTree{}
+	case "tag":
+		object = &GitTag{}
+	case "commit":
+		object = &GitCommit{}
 	default:
-		return "", fmt.Errorf("unknown types %s", objType)
+		return "", fmt.Errorf("unknown types %s", oType)
 	}
-	if err := obj.Deserialize(data); err != nil {
+	if err := object.Deserialize(data); err != nil {
 		return "", fmt.Errorf("error while deserializing object: %w", err)
 	}
-	return objectWrite(obj, repo)
+	return objectWrite(object, repo)
 }
