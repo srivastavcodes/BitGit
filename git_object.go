@@ -114,3 +114,43 @@ func objectWrite(obj GitObject, repo *GitRepository) (string, error) {
 	}
 	return sha, nil
 }
+
+func catFile(repo *GitRepository, objectName, objectType string) error {
+	sha, err := objectFind(repo, objectName, objectType, false)
+	if err != nil {
+		return err
+	}
+	obj, err := objectRead(repo, sha)
+	if err != nil {
+		return err
+	}
+	data, err := obj.Serialize(repo)
+	if err != nil {
+		return err
+	}
+	_, err = os.Stdout.Write(data)
+	return err
+}
+
+func objectFind(_ *GitRepository, name string, _ string, _ bool) (string, error) {
+	return name, nil
+}
+
+func objectHash(file io.Reader, objType string, repo *GitRepository) (string, error) {
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("error while reading file: %w", err)
+	}
+	var obj GitObject
+
+	switch objType {
+	case "blob":
+		obj = &GitBlob{}
+	default:
+		return "", fmt.Errorf("unknown types %s", objType)
+	}
+	if err := obj.Deserialize(data); err != nil {
+		return "", fmt.Errorf("error while deserializing object: %w", err)
+	}
+	return objectWrite(obj, repo)
+}
