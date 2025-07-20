@@ -68,5 +68,9 @@ func invokeCatFile() {
 	if len(os.Args) < 4 {
 		fmt.Printf("%sInvalid format:%s <command> TYPE OBJECT>", ColorRed, ColorReset)
 	}
-
+	oType, object := os.Args[2], os.Args[3]
+	err := CmdCatFile(object, oType)
+	if err != nil {
+		fmt.Printf("%sERROR:%s %w", ColorRed, ColorReset, err)
+	}
 }

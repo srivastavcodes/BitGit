@@ -5,12 +5,12 @@ import (
 	"os"
 )
 
-func CmdCatFile(oName, oType string) error {
+func CmdCatFile(object, oType string) error {
 	repo, err := repoFind(".", true)
 	if err != nil {
 		return err
 	}
-	return catFile(repo, oName, oType)
+	return catFile(repo, object, oType)
 }
 
 func CmdHashObjects(path, oType string, write bool) error {

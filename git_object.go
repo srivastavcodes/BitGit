@@ -121,25 +121,25 @@ func objectWrite(object GitObject, repo *GitRepository) (string, error) {
 	return sha, nil
 }
 
-func catFile(repo *GitRepository, oName, oType string) error {
-	sha, err := objectFind(repo, oName, oType, false)
+func catFile(repo *GitRepository, object, oType string) error {
+	sha, err := objectFind(repo, object, oType, true)
 	if err != nil {
 		return err
 	}
-	obj, err := objectRead(repo, sha)
+	gitObject, err := objectRead(repo, sha)
 	if err != nil {
 		return err
 	}
-	data, err := obj.Serialize(repo)
+	data, err := gitObject.Serialize(repo)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to serialize repository: %w", err)
 	}
 	_, err = os.Stdout.Write(data)
 	return err
 }
 
-func objectFind(_ *GitRepository, oName string, _ string, _ bool) (string, error) {
-	return oName, nil
+func objectFind(_ *GitRepository, object string, _ string, _ bool) (string, error) {
+	return object, nil
 }
 
 func objectHash(file io.Reader, oType string, repo *GitRepository) (string, error) {
