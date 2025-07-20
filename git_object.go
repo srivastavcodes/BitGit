@@ -121,8 +121,8 @@ func objectWrite(object GitObject, repo *GitRepository) (string, error) {
 	return sha, nil
 }
 
-func catFile(repo *GitRepository, objectName, objectType string) error {
-	sha, err := objectFind(repo, objectName, objectType, false)
+func catFile(repo *GitRepository, oName, oType string) error {
+	sha, err := objectFind(repo, oName, oType, false)
 	if err != nil {
 		return err
 	}
@@ -138,8 +138,8 @@ func catFile(repo *GitRepository, objectName, objectType string) error {
 	return err
 }
 
-func objectFind(_ *GitRepository, name string, _ string, _ bool) (string, error) {
-	return name, nil
+func objectFind(_ *GitRepository, oName string, _ string, _ bool) (string, error) {
+	return oName, nil
 }
 
 func objectHash(file io.Reader, oType string, repo *GitRepository) (string, error) {

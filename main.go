@@ -44,6 +44,8 @@ func main() {
 		fmt.Print(helpMessage)
 	case "init":
 		invokeInit()
+	case "cat-file":
+		invokeCatFile()
 	}
 }
 
@@ -60,4 +62,11 @@ func invokeInit() {
 		return
 	}
 	fmt.Printf("initialized an empty git repository in %s\n", repo.GitDir)
+}
+
+func invokeCatFile() {
+	if len(os.Args) < 4 {
+		fmt.Printf("%sInvalid format:%s <command> TYPE OBJECT>", ColorRed, ColorReset)
+	}
+
 }
