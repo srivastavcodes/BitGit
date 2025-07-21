@@ -46,6 +46,11 @@ func main() {
 		invokeInit()
 	case "cat-file":
 		invokeCatFile()
+	case "hash-object":
+		invokeHashObject()
+	default:
+		fmt.Printf("%sError: %s command invalid\n", ColorRed, ColorReset)
+		fmt.Print(helpMessage)
 	}
 }
 
@@ -67,10 +72,30 @@ func invokeInit() {
 func invokeCatFile() {
 	if len(os.Args) < 4 {
 		fmt.Printf("%sInvalid format:%s <command> TYPE OBJECT>", ColorRed, ColorReset)
+		return
 	}
 	oType, object := os.Args[2], os.Args[3]
 	err := CmdCatFile(object, oType)
 	if err != nil {
-		fmt.Printf("%sERROR:%s %w", ColorRed, ColorReset, err)
+		fmt.Printf("%sERROR:%s %s\n", ColorRed, ColorReset, err)
+	}
+}
+
+func invokeHashObject() {
+	if len(os.Args) < 4 {
+		fmt.Printf("%sInvalid format:%s <command> TYPE PATH>", ColorRed, ColorReset)
+		return
+	}
+	var oType, path string
+	var write bool
+	if os.Args[2] == "w" {
+		write = true
+		oType, path = os.Args[3], os.Args[4]
+	} else {
+		oType, path = os.Args[2], os.Args[3]
+	}
+	err := CmdHashObjects(path, oType, write)
+	if err != nil {
+		fmt.Printf("%sERROR:%s %s\n", ColorRed, ColorReset, err)
 	}
 }
