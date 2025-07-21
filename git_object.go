@@ -53,7 +53,7 @@ func objectRead(repo *GitRepository, sha string) (GitObject, error) {
 	}
 	oType := string(raw[0:space])
 
-	x00 := bytes.IndexByte(raw[space:], '\x00')
+	x00 := bytes.IndexByte(raw, '\x00')
 	if x00 == -1 {
 		return nil, fmt.Errorf("malformed object %s: no null separator", sha)
 	}
