@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/zlib"
 	"crypto/sha1"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -15,10 +14,6 @@ type GitObject interface {
 	Serialize(repo *GitRepository) ([]byte, error)
 	Deserialize(data []byte) error
 	Type() string
-}
-
-func NewGitObject(data []byte) (GitObject, error) {
-	return nil, errors.New("unimplemented: concrete GitObject type needed")
 }
 
 func objectRead(repo *GitRepository, sha string) (GitObject, error) {
