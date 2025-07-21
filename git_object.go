@@ -126,11 +126,11 @@ func catFile(repo *GitRepository, object, oType string) error {
 	if err != nil {
 		return err
 	}
-	gitObject, err := objectRead(repo, sha)
+	objectData, err := objectRead(repo, sha)
 	if err != nil {
 		return err
 	}
-	data, err := gitObject.Serialize(repo)
+	data, err := objectData.Serialize(repo)
 	if err != nil {
 		return fmt.Errorf("failed to serialize repository: %w", err)
 	}
